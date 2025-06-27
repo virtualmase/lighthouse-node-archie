@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Archie - Virtual Lighthouse Node | Coreweaver Labs</title>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            color: #f8fafc;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #334155;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .header-title h1 {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2A9D8F;
+        }
+
+        .header-title p {
+            font-size: 0.875rem;
+            color: #94a3b8;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .time-display {
+            text-align: right;
+        }
+
+        .time-display .date {
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .time-display .time {
+            font-size: 0.75rem;
+            color: #94a3b8;
+        }
+
+        /* Archie Avatar */
+        .archie-avatar {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .archie-circle {
+            width: 4rem;
+            height: 4rem;
+            border-radius: 50%;
+            background: #E9C46A;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            border: 2px solid #F4A261;
+            transition: transform 0.3s ease;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .archie-circle:hover {
+            transform: scale(1.1);
+        }
+
+        .status-dot {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 1rem;
+            height: 1rem;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .archie-chat {
+            position: absolute;
+            top: 5rem;
+            right: 0;
+            width: 16rem;
+            padding: 1rem;
+            background: rgba(30, 41, 59, 0.95);
+            border: 1px solid #2A9D8F;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            z-index: 200;
+            display: none;
+        }
+
+        .archie-chat.show {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .chat-button {
+            width: 100%;
+            padding: 0.5rem 1rem;
+            background: #2A9D8F;
+            color: white;
+            border: none;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            margin-top: 0.75rem;
+            transition: background 0.3s ease;
+        }
+
+        .chat-button:hover {
+            background: #238b7a;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 2rem 0;
+        }
+
+        .grid {
+            display: grid;
+            gap: 2rem;
+        }
+
+        .grid-cols-3 {
+            grid-template-columns: 2fr 1fr;
+        }
+
+        @media (max-width: 1024px) {
+            .grid-cols-3 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Cards */
+        .card {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid #334155;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            backdrop-filter: blur(10px);
+            transition: border-color 0.3s ease;
+        }
+
+        .card:hover {
+            border-color: #2A9D8F;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-description {
+            color: #94a3b8;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Lighthouse Visualization */
+        .lighthouse-container {
+            position: relative;
+            width: 100%;
+            height: 16rem;
+            background: linear-gradient(to bottom, #334155, #1e293b);
+            border-radius: 0.5rem;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .lighthouse-beam {
+            position: absolute;
+            width: 8rem;
+            height: 8rem;
+            border-radius: 50%;
+            opacity: 0.6;
+            animation: rotate 8s linear infinite;
+        }
+
+        .lighthouse-icon {
+            position: relative;
+            z-index: 10;
+            padding: 1rem;
+            background: #334155;
+            border: 2px solid #2A9D8F;
+            border-radius: 50%;
+            box-shadow: 0 0 30px rgba(42, 157, 143, 0.6);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        .status-badge {
+            position: absolute;
+            bottom: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 0.25rem 0.75rem;
+            background: #10b981;
+            color: white;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: rgba(30, 41, 59, 0.8);
+            border: 1px solid #334155;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .metric-card:hover {
+            border-color: #2A9D8F;
+        }
+
+        .metric-value {
+            font-size: 1.25rem;
+            font-weight: bold;
+        }
+
+        .metric-label {
+            font-size: 0.875rem;
+            color: #94a3b8;
+        }
+
+        /* Weather Grid */
+        .weather-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .weather-item {
+            text-align: center;
+        }
+
+        .weather-value {
+            font-size: 1.125rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.25rem;
+        }
+
+        /* Alerts */
+        .alert {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .alert-success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .alert-info {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .alert-title {
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .alert-description {
+            font-size: 0.75rem;
+            color: #94a3b8;
+        }
+
+        /* Buttons */
+        .button {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1rem;
+            background: #334155;
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            margin-bottom: 0.75rem;
+        }
+
+        .button:hover {
+            background: #475569;
+        }
+
+        /* Progress Bars */
+        .progress-container {
+            margin-bottom: 1rem;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.875rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 0.5rem;
+            background: #334155;
+            border-radius: 0.25rem;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #2A9D8F;
+            transition: width 0.3s ease;
+        }
+
+        /* Footer */
+        .footer {
+            border-top: 1px solid #334155;
+            background: rgba(30, 41, 59, 0.3);
+            backdrop-filter: blur(10px);
+            margin-top: 4rem;
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 0;
+            font-size: 0.875rem;
+            color: #94a3b8;
+        }
+
+        /* Animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes glow {
+            from { box-shadow: 0 0 20px rgba(42, 157, 143, 0.5); }
+            to { box-shadow: 0 0 40px rgba(42, 157, 143, 0.8); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Icon colors */
+        .icon-teal { color: #2A9D8F; }
+        .icon-yellow { color: #E9C46A; }
+        .icon-green { color: #10b981; }
+        .icon-blue { color: #3b82f6; }
+        .icon-red { color: #ef4444; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .weather-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="header-left">
+                    <i data-lucide="lighthouse" class="icon-teal" style="width: 2rem; height: 2rem;"></i>
+                    <div class="header-title">
+                        <h1>Archie Virtual Lighthouse Node</h1>
+                        <p>Coreweaver Labs Maritime AI System</p>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="time-display">
+                        <div class="date" id="current-date"></div>
+                        <div class="time" id="current-time"></div>
+                    </div>
+                    <div class="archie-avatar" onclick="toggleArchieChat()">
+                        <div class="archie-circle">🦆</div>
+                        <div class="status-dot"></div>
+                        <div class="archie-chat" id="archie-chat">
+                            <p id="archie-message">Welcome to the Virtual Lighthouse Node! I'm Archie, your maritime AI assistant.</p>
+                            <button class="chat-button">
+                                <i data-lucide="message-circle" style="width: 1rem; height: 1rem; margin-right: 0.5rem;"></i>
+                                Chat with Archie
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <div class="grid grid-cols-3">
+                <!-- Left Column -->
+                <div>
+                    <!-- Lighthouse Visualization -->
+                    <div class="card">
+                        <h2 class="card-title">Lighthouse Status</h2>
+                        <p class="card-description">Real-time lighthouse beam and system monitoring</p>
+                        <div class="lighthouse-container">
+                            <div class="lighthouse-beam" id="lighthouse-beam"></div>
+                            <div class="lighthouse-icon">
+                                <i data-lucide="lighthouse" class="icon-teal" style="width: 3rem; height: 3rem;"></i>
+                            </div>
+                            <div class="status-badge">OPERATIONAL</div>
+                        </div>
+                    </div>
+
+                    <!-- System Metrics -->
+                    <div style="margin-top: 2rem;">
+                        <h2 class="card-title" style="margin-bottom: 1rem;">System Metrics</h2>
+                        <div class="metrics-grid">
+                            <div class="metric-card">
+                                <i data-lucide="activity" class="icon-teal" style="width: 1.5rem; height: 1.5rem;"></i>
+                                <div>
+                                    <div class="metric-label">Uptime</div>
+                                    <div class="metric-value icon-teal" id="uptime-value">99.9%</div>
+                                </div>
+                            </div>
+                            <div class="metric-card">
+                                <i data-lucide="wifi" class="icon-yellow" style="width: 1.5rem; height: 1.5rem;"></i>
+                                <div>
+                                    <div class="metric-label">Signal</div>
+                                    <div class="metric-value icon-yellow">Strong</div>
+                                </div>
+                            </div>
+                            <div class="metric-card">
+                                <i data-lucide="battery" class="icon-green" style="width: 1.5rem; height: 1.5rem;"></i>
+                                <div>
+                                    <div class="metric-label">Power</div>
+                                    <div class="metric-value icon-green">87%</div>
+                                </div>
+                            </div>
+                            <div class="metric-card">
+                                <i data-lucide="ship" class="icon-blue" style="width: 1.5rem; height: 1.5rem;"></i>
+                                <div>
+                                    <div class="metric-label">Traffic</div>
+                                    <div class="metric-value icon-blue" id="vessel-count">24</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Performance Analytics -->
+                    <div class="card" style="margin-top: 2rem;">
+                        <h2 class="card-title">Performance Analytics</h2>
+                        <p class="card-description">System uptime and response time over the last 24 hours</p>
+                        <div style="height: 16rem; background: #334155; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center;">
+                            <div style="text-align: center;">
+                                <i data-lucide="bar-chart-3" style="width: 3rem; height: 3rem; color: #64748b; margin-bottom: 0.5rem;"></i>
+                                <p style="color: #64748b;">Performance charts would be displayed here</p>
+                                <p style="font-size: 0.75rem; color: #475569;">Real-time data visualization</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div>
+                    <!-- Weather Widget -->
+                    <div class="card">
+                        <h3 class="card-title">
+                            <i data-lucide="thermometer" style="width: 1.25rem; height: 1.25rem; margin-right: 0.5rem;"></i>
+                            Weather Conditions
+                        </h3>
+                        <div class="weather-grid">
+                            <div class="weather-item">
+                                <div class="metric-label">Temperature</div>
+                                <div class="weather-value">22°C</div>
+                            </div>
+                            <div class="weather-item">
+                                <div class="metric-label">Wind Speed</div>
+                                <div class="weather-value">
+                                    <i data-lucide="wind" style="width: 1rem; height: 1rem;"></i>
+                                    12 kts
+                                </div>
+                            </div>
+                            <div class="weather-item">
+                                <div class="metric-label">Visibility</div>
+                                <div class="weather-value">
+                                    <i data-lucide="eye" style="width: 1rem; height: 1rem;"></i>
+                                    10 nm
+                                </div>
+                            </div>
+                            <div class="weather-item">
+                                <div class="metric-label">Sea State</div>
+                                <div class="weather-value">
+                                    <i data-lucide="waves" style="width: 1rem; height: 1rem;"></i>
+                                    Calm
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- System Alerts -->
+                    <div class="card" style="margin-top: 1.5rem;">
+                        <h3 class="card-title">
+                            <i data-lucide="alert-triangle" style="width: 1.25rem; height: 1.25rem; margin-right: 0.5rem;"></i>
+                            System Alerts
+                        </h3>
+                        <div class="alert alert-success">
+                            <i data-lucide="check-circle" class="icon-green" style="width: 1.25rem; height: 1.25rem;"></i>
+                            <div>
+                                <div class="alert-title">All Systems Operational</div>
+                                <div class="alert-description" id="last-check">Last check: --:--:--</div>
+                            </div>
+                        </div>
+                        <div class="alert alert-info">
+                            <i data-lucide="anchor" class="icon-blue" style="width: 1.25rem; height: 1.25rem;"></i>
+                            <div>
+                                <div class="alert-title">Vessel Approaching</div>
+                                <div class="alert-description">Cargo ship, 2.3 nm NE</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="card" style="margin-top: 1.5rem;">
+                        <h3 class="card-title">Quick Actions</h3>
+                        <button class="button">
+                            <i data-lucide="bar-chart-3" style="width: 1rem; height: 1rem;"></i>
+                            View Analytics
+                        </button>
+                        <button class="button">
+                            <i data-lucide="settings" style="width: 1rem; height: 1rem;"></i>
+                            System Settings
+                        </button>
+                        <button class="button">
+                            <i data-lucide="message-circle" style="width: 1rem; height: 1rem;"></i>
+                            Contact Support
+                        </button>
+                    </div>
+
+                    <!-- System Health -->
+                    <div class="card" style="margin-top: 1.5rem;">
+                        <h3 class="card-title">System Health</h3>
+                        <div class="progress-container">
+                            <div class="progress-header">
+                                <span>CPU Usage</span>
+                                <span id="cpu-usage">34%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 34%;"></div>
+                            </div>
+                        </div>
+                        <div class="progress-container">
+                            <div class="progress-header">
+                                <span>Memory</span>
+                                <span>67%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 67%;"></div>
+                            </div>
+                        </div>
+                        <div class="progress-container">
+                            <div class="progress-header">
+                                <span>Storage</span>
+                                <span>23%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 23%;"></div>
+                            </div>
+                        </div>
+                        <div class="progress-container">
+                            <div class="progress-header">
+                                <span>Network</span>
+                                <span>89%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 89%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <i data-lucide="lighthouse" class="icon-teal" style="width: 1.25rem; height: 1.25rem;"></i>
+                    <span>© 2025 Coreweaver Labs - Virtual Lighthouse Node Technology</span>
+                </div>
+                <div>Powered by Archie AI Assistant</div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Time and date updates
+        function updateTime() {
+            const now = new Date();
+            document.getElementById('current-date').textContent = now.toLocaleDateString();
+            document.getElementById('current-time').textContent = now.toLocaleTimeString();
+            document.getElementById('last-check').textContent = `Last check: ${now.toLocaleTimeString()}`;
+        }
+
+        // Archie chat toggle
+        function toggleArchieChat() {
+            const chat = document.getElementById('archie-chat');
+            chat.classList.toggle('show');
+        }
+
+        // Archie messages rotation
+        const archieMessages = [
+            "All systems are running smoothly! 🌊",
+            "Monitoring maritime traffic in the area...",
+            "Weather conditions are optimal for navigation.",
+            "No alerts detected. Smooth sailing ahead!",
+            "Virtual lighthouse beam is operating at full capacity.",
+            "Ready to assist with any navigation queries!"
+        ];
+
+        function updateArchieMessage() {
+            const messageElement = document.getElementById('archie-message');
+            const randomMessage = archieMessages[Math.floor(Math.random() * archieMessages.length)];
+            messageElement.textContent = randomMessage;
+        }
+
+        // Lighthouse beam animation
+        function updateLighthouseBeam() {
+            const beam = document.getElementById('lighthouse-beam');
+            const colors = [
+                'conic-gradient(from 0deg, transparent 0deg, rgba(42, 157, 143, 0.8) 10deg, rgba(42, 157, 143, 0.4) 20deg, transparent 30deg, transparent 360deg)',
+                'conic-gradient(from 45deg, transparent 0deg, rgba(42, 157, 143, 0.8) 10deg, rgba(42, 157, 143, 0.4) 20deg, transparent 30deg, transparent 360deg)',
+                'conic-gradient(from 90deg, transparent 0deg, rgba(42, 157, 143, 0.8) 10deg, rgba(42, 157, 143, 0.4) 20deg, transparent 30deg, transparent 360deg)'
+            ];
+            let colorIndex = 0;
+            
+            setInterval(() => {
+                beam.style.background = colors[colorIndex % colors.length];
+                colorIndex++;
+            }, 200);
+        }
+
+        // Simulate data updates
+        function simulateDataUpdates() {
+            const uptimeElement = document.getElementById('uptime-value');
+            const vesselElement = document.getElementById('vessel-count');
+            
+            setInterval(() => {
+                const currentUptime = parseFloat(uptimeElement.textContent);
+                const newUptime = Math.max(99.0, currentUptime + (Math.random() - 0.5) * 0.1);
+                uptimeElement.textContent = `${newUptime.toFixed(1)}%`;
+                
+                const currentVessels = parseInt(vesselElement.textContent);
+                const newVessels = Math.max(0, currentVessels + Math.floor((Math.random() - 0.5) * 3));
+                vesselElement.textContent = newVessels;
+            }, 5000);
+        }
+
+        // Close chat when clicking outside
+        document.addEventListener('click', function(event) {
+            const chat = document.getElementById('archie-chat');
+            const avatar = document.querySelector('.archie-avatar');
+            
+            if (!avatar.contains(event.target)) {
+                chat.classList.remove('show');
+            }
+        });
+
+        // Initialize everything
+        updateTime();
+        updateLighthouseBeam();
+        simulateDataUpdates();
+        
+        // Set up intervals
+        setInterval(updateTime, 1000);
+        setInterval(updateArchieMessage, 8000);
+    </script>
+</body>
+</html>
+
